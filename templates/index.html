@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson bookings | Based Tutors</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="page-width brand">Based Tutors</div>
+  </header>
+
+  <main class="page-width">
+    <h1>Lesson bookings</h1>
+
+    {% if message %}
+    <p class="notice{% if is_error %} notice-error{% endif %}" role="{% if is_error %}alert{% else %}status{% endif %}">{{ message }}</p>
+    {% endif %}
+
+    <div class="dashboard">
+      <section class="panel add-slot" aria-labelledby="add-heading">
+        <h2 id="add-heading">Add a slot</h2>
+        <form action="/slots" method="post" class="add-form">
+          <div class="field">
+            <label for="slot-date">Date</label>
+            <input id="slot-date" type="date" name="slot_date" min="{{ minimum_date }}" required>
+          </div>
+          <div class="field">
+            <label for="slot-time">Start time</label>
+            <input id="slot-time" type="time" name="slot_time" step="1800" aria-describedby="slot-length" required>
+            <p id="slot-length" class="field-help">30-minute slots start on the hour or half hour.</p>
+          </div>
+          <button type="submit">Add slot</button>
+        </form>
+      </section>
+
+      <section class="panel schedule" aria-labelledby="schedule-heading">
+        <h2 id="schedule-heading">Lesson slots</h2>
+        {% if slots %}
+        <ul class="slots" role="list">
+          {% for slot in slots %}
+          <li class="slot">
+            <div class="slot-summary">
+              <h3>{{ slot.day_label }}</h3>
+              <p class="slot-time">{{ slot.time_label }}</p>
+              {% if slot.student_name %}
+              <span class="slot-status status-booked">Booked</span>
+              {% else %}
+              <span class="slot-status status-available">Available</span>
+              {% endif %}
+            </div>
+
+            {% if slot.student_name %}
+            <form action="/slots/{{ slot.id }}/cancel" method="post" class="slot-form">
+              <input type="hidden" name="version" value="{{ slot.version }}">
+              <p class="student">{{ slot.student_name }}</p>
+              <button class="secondary" type="submit" aria-label="Cancel booking for {{ slot.day_label }} at {{ slot.time_label }}">Cancel booking</button>
+            </form>
+            {% else %}
+            <form action="/slots/{{ slot.id }}/book" method="post" class="slot-form">
+              <input type="hidden" name="version" value="{{ slot.version }}">
+              <input type="text" name="student_name" aria-label="Student name for {{ slot.day_label }} at {{ slot.time_label }}" placeholder="Student name" maxlength="80" required>
+              <button type="submit" aria-label="Book slot for {{ slot.day_label }} at {{ slot.time_label }}">Book slot</button>
+            </form>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty-state">
+          <h3>No lesson slots yet</h3>
+          <p>Choose a date and start time to add your first slot.</p>
+        </div>
+        {% endif %}
+      </section>
+    </div>
+  </main>
+</body>
+</html>
