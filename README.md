@@ -1,6 +1,6 @@
 # Based Tutors Booking
 
-A local booking prototype for one tutor. Add a 30-minute slot, book it under a student name, or cancel a booking to make the slot available again. The schedule uses the computer’s local time.
+An AI-assisted booking prototype for Based Tutors, built with Python, FastAPI and SQLite. It gives one tutor a page to add 30-minute slots, book lessons and reopen cancelled slots. It runs locally and uses the computer’s time zone.
 
 ## Run it
 
@@ -23,16 +23,13 @@ Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in a browser. Pick a future 
 | `templates/index.html` | Displays the schedule and the three HTML forms. |
 | `static/style.css` | Styles the page. |
 
-## Explain it in an interview
+## How booking works
 
-> I wanted one place for a tutor to manage their available sessions. I modelled each slot as a row in SQLite. An empty `student_name` means the slot is available. Clicking Book sends an HTML form to FastAPI, which runs one SQL update that only succeeds while the slot is still available. If two requests go for the same slot, the first updates the row and the second updates zero rows. The app shows a message asking the user to check the schedule.
+Each slot is one SQLite row. When the booking form is submitted, FastAPI runs a single SQL update that sets the student name only if the slot is still available and the form’s version matches the row. When two requests compete for the same slot, one updates the row and the other receives an HTTP 409 conflict. A test with two simultaneous requests confirmed this behaviour.
 
-- `UNIQUE` on `starts_at` keeps the tutor from adding the same slot twice.
-- `student_name IS NULL` is part of the booking update. SQLite checks that condition as it applies the change, so two requests cannot both claim the same available slot.
-- `version` is a counter that increases whenever a slot is booked or cancelled. The form carries the version the user saw, so a cancellation from an old page cannot clear someone else’s newer booking.
-- After a successful change the browser returns to the schedule. Refreshing then reloads the page without sending the form again.
+The database also enforces unique start times. The version increases after each booking or cancellation, so an old form cannot cancel a newer booking.
 
-## Try the race condition yourself
+## Try it in two tabs
 
 1. Add an available slot. Open the schedule in two tabs before either tab books it.
 2. Book it for Alex in the first tab. In the second tab, try booking the same slot for Sam.
